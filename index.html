@@ -2,64 +2,139 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>카카오맵 예제 - 대한민국 지도</title>
-    <!-- 카카오맵 JavaScript API 호출 (본인의 API Key로 대체하세요) -->
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=19f1385bacd7bf7d9e5c7804cc8154ce"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오맵 커스텀 예제</title>
+    <!-- 카카오맵 JavaScript API 호출 -->
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=19f1385bacd7bf7d9e5c7804cc8154ce&libraries=services,clusterer"></script> 
     <style>
-        /* 지도 스타일 */
-        #map { width: 100%; height: 600px; }
+        /* 지도 크기 설정 */
+        #map { 
+            width: 100%; 
+            height: 1000px; 
+        }
 
-    /* 말풍선 기본 스타일 */
-    .custom-info-window {
-        background-color: white;
-        padding: 10px;
-        font-size: 14px;
-        border: 1px solid #ccc; /* 사각형 테두리 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        white-space: nowrap;
-        border-radius: 0; /* 둥근 테두리 제거 */
-    }
+        /* 말풍선 기본 스타일 */
+        .custom-info-window {
+            background-color: white;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc; /* 사각형 테두리 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+            border-radius: 0; /* 둥근 테두리 제거 */
+        }
     </style>
 </head>
 <body>
-    <h3>카카오맵 예제 - 대한민국 지도</h3>
+    <h3>카카오맵 커스텀 마커와 경로 예제</h3>
     <div id="map"></div>
 
     <script>
         // 지도 생성
-        var mapContainer = document.getElementById('map');
+        var mapContainer = document.getElementById('map'); // 지도가 표시될 div
         var mapOption = {
-            center: new kakao.maps.LatLng(37.47535272846636, 126.6443686099089), // 지도 중심 좌표
-            level: 7 // 지도 확대 레벨
+            center: new kakao.maps.LatLng(37.41020233137107, 126.6796163126106), // 지도 중심 좌표
+            level: 8 // 확대 수준
         };
         var map = new kakao.maps.Map(mapContainer, mapOption);
 
-        // 마커 위치
-        var markerPosition = new kakao.maps.LatLng(37.47535272846636, 126.6443686099089);
+        // 커스텀 아이콘 (동그라미 모양)
+        var circleIcon = new kakao.maps.MarkerImage(
+            'data:image/svg+xml;utf-8,' + encodeURIComponent(`
+                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="15" fill="red" stroke="white" stroke-width="2" />
+                </svg>`), // 동그라미 모양의 SVG
+            new kakao.maps.Size(40, 40), // 크기
+            { offset: new kakao.maps.Point(20, 20) } // 마커 중심
+        );
 
-        // 마커 생성
-        var marker = new kakao.maps.Marker({
-            position: markerPosition
+        // 마커들에 표시할 좌표
+        var positions = [
+            new kakao.maps.LatLng(37.41020233137107, 126.6796163126106),
+            new kakao.maps.LatLng(37.41040233137107, 126.6806163126106),
+            new kakao.maps.LatLng(37.41060233137107, 126.6816163126106)
+        ];
+
+        var markers = [];
+        var infoWindows = [];
+
+        // 마커와 메모 추가
+        positions.forEach(function(position, index) {
+            var marker = new kakao.maps.Marker({
+                position: position,
+                image: circleIcon
+            });
+
+            var infoWindow = new kakao.maps.InfoWindow({
+                content: '<div class="custom-info-window">여기는 마커 ' + (index + 1) + ' 입니다.</div>',
+                removable: true
+            });
+
+            // 마커 클릭 시 메모 열기/닫기
+            kakao.maps.event.addListener(marker, 'click', function() {
+                if (infoWindow.getMap()) {
+                    infoWindow.close();
+                } else {
+                    infoWindow.open(map, marker);
+                }
+            });
+
+            // 마커 배열에 추가
+            markers.push(marker);
+            infoWindows.push(infoWindow);
+            marker.setMap(map);
         });
-        marker.setMap(map);
 
-        // 말풍선 내용 정의
-        var infoContent = `<div class="custom-info-window">여기에는 메모 내용을 입력하세요.</div>`;
-        var infoWindow = new kakao.maps.InfoWindow({
-            content: infoContent,
-            removable: true // 닫기 버튼 추가
+        // 마커 클러스터러 설정
+        var clusterer = new kakao.maps.MarkerClusterer({
+            map: map,
+            averageCenter: true,
+            minLevel: 10
         });
+        
+        // 마커들을 클러스터러에 추가
+        clusterer.addMarkers(markers);
 
-        // 마커 클릭 시 말풍선 열기/닫기 기능
-        var isOpen = false;
-        kakao.maps.event.addListener(marker, 'click', function () {
-            if (isOpen) {
-                infoWindow.close();
-            } else {
-                infoWindow.open(map, marker);
+        // GPX 파일 로드 및 경로 표시
+        function loadGPX(gpxData) {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(gpxData, 'text/xml');
+            var trackpoints = xmlDoc.getElementsByTagName('trkpt');
+            var path = [];
+
+            // GPX 데이터에서 경로 좌표 추출
+            for (var i = 0; i < trackpoints.length; i++) {
+                var lat = parseFloat(trackpoints[i].getAttribute('lat'));
+                var lon = parseFloat(trackpoints[i].getAttribute('lon'));
+                path.push(new kakao.maps.LatLng(lat, lon));
             }
-            isOpen = !isOpen;
-        });
+
+            // 경로 표시
+            var polyline = new kakao.maps.Polyline({
+                path: path, // 경로
+                strokeWeight: 5, // 선 두께
+                strokeColor: '#ff0000', // 선 색
+                strokeOpacity: 0.7, // 선 투명도
+                strokeStyle: 'solid' // 선 스타일
+            });
+
+            polyline.setMap(map);
+        }
+
+        // 예시 GPX 데이터 (실제로는 외부 파일이나 API에서 로드)
+        var exampleGPX = `
+        <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">
+            <trk>
+                <trkseg>
+                    <trkpt lat="37.41020233137107" lon="126.6796163126106"></trkpt>
+                    <trkpt lat="37.41040233137107" lon="126.6806163126106"></trkpt>
+                    <trkpt lat="37.41060233137107" lon="126.6816163126106"></trkpt>
+                </trkseg>
+            </trk>
+        </gpx>
+        `;
+        
+        loadGPX(exampleGPX); // GPX 데이터 로드 및 경로 표시
     </script>
 </body>
 </html>
