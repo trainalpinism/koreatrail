@@ -2,139 +2,86 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>카카오맵 커스텀 예제</title>
-    <!-- 카카오맵 JavaScript API 호출 -->
-    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=19f1385bacd7bf7d9e5c7804cc8154ce&libraries=services,clusterer"></script> 
+    <title>카카오맵 커스텀 마커</title>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=19f1385bacd7bf7d9e5c7804cc8154ce&libraries=clusterer"></script>
     <style>
-        /* 지도 크기 설정 */
-        #map { 
-            width: 100%; 
-            height: 1000px; 
-        }
-
-        /* 말풍선 기본 스타일 */
-        .custom-info-window {
-            background-color: white;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc; /* 사각형 테두리 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            white-space: nowrap;
-            border-radius: 0; /* 둥근 테두리 제거 */
-        }
+        #map { width: 100%; height: 1000px; }
     </style>
 </head>
 <body>
-    <h3>카카오맵 커스텀 마커와 경로 예제</h3>
+    <h3>카카오맵 지도</h3>
     <div id="map"></div>
 
     <script>
-        // 지도 생성
-        var mapContainer = document.getElementById('map'); // 지도가 표시될 div
+        // 지도 중심과 확대 수준 설정
+        var mapContainer = document.getElementById('map');
         var mapOption = {
             center: new kakao.maps.LatLng(37.41020233137107, 126.6796163126106), // 지도 중심 좌표
-            level: 8 // 확대 수준
+            level: 7 // 확대 수준
         };
         var map = new kakao.maps.Map(mapContainer, mapOption);
 
-        // 커스텀 아이콘 (동그라미 모양)
-        var circleIcon = new kakao.maps.MarkerImage(
-            'data:image/svg+xml;utf-8,' + encodeURIComponent(`
-                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="20" cy="20" r="15" fill="red" stroke="white" stroke-width="2" />
-                </svg>`), // 동그라미 모양의 SVG
-            new kakao.maps.Size(40, 40), // 크기
-            { offset: new kakao.maps.Point(20, 20) } // 마커 중심
-        );
+        // 동그라미 모양의 마커 아이콘 생성 함수
+        function createCircleIcon() {
+            return new kakao.maps.MarkerImage(
+                'data:image/svg+xml;utf-8,' + encodeURIComponent(`
+                    <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="15" cy="15" r="12" fill="red" stroke="white" stroke-width="3"/>
+                    </svg>`), // 동그라미 SVG
+                new kakao.maps.Size(30, 30), // 크기 설정
+                { offset: new kakao.maps.Point(15, 15) } // 마커 중심 설정
+            );
+        }
 
-        // 마커들에 표시할 좌표
+        // 마커 위치와 정보 데이터
         var positions = [
-            new kakao.maps.LatLng(37.41020233137107, 126.6796163126106),
-            new kakao.maps.LatLng(37.47562956623796, 126.61970494372417),
-            new kakao.maps.LatLng(37.40939542754879, 126.6938828683736)
+            { lat: 37.475379766747466, lon: 126.64437130808757, memo: "(송림동)해장국집" },
+            { lat: 37.475631855098, lon: 126.61971623735018, memo: "연경" },
+            { lat: 37.40938869192894, lon: 126.69389136724412, memo: "1층 공단떡볶이 / 2층 백암왕순" },
+            { lat: 37.44020233137107, lon: 126.6996163126106, memo: "대전" }
         ];
 
+        // 마커 배열
         var markers = [];
-        var infoWindows = [];
 
-        // 마커와 메모 추가
-        positions.forEach(function(position, index) {
+        // 각 위치에 마커 생성
+        positions.forEach(function(position) {
             var marker = new kakao.maps.Marker({
-                position: position,
-                image: circleIcon
+                position: new kakao.maps.LatLng(position.lat, position.lon),
+                image: createCircleIcon() // 동그라미 모양 마커 아이콘
             });
 
+            // 마커 클릭 시 메모(InfoWindow) 표시 및 토글 기능 구현
             var infoWindow = new kakao.maps.InfoWindow({
-                content: '<div class="custom-info-window">여기는 마커 ' + (index + 1) + ' 입니다.</div>',
-                removable: true
+                content: `<div style="padding:5px;">${position.memo}</div>`,
+                removable: true // 닫기 버튼 추가
             });
 
-            // 마커 클릭 시 메모 열기/닫기
+            var isOpen = false; // InfoWindow 열림 상태 추적
+
+            // 마커 클릭 시 토글로 메모 열기/닫기
             kakao.maps.event.addListener(marker, 'click', function() {
-                if (infoWindow.getMap()) {
+                if (isOpen) {
                     infoWindow.close();
                 } else {
                     infoWindow.open(map, marker);
                 }
+                isOpen = !isOpen;
             });
 
-            // 마커 배열에 추가
             markers.push(marker);
-            infoWindows.push(infoWindow);
-            marker.setMap(map);
         });
 
         // 마커 클러스터러 설정
         var clusterer = new kakao.maps.MarkerClusterer({
             map: map,
-            averageCenter: true,
-            minLevel: 10
+            averageCenter: true, // 클러스터링 시 중앙을 평균으로
+            minLevel: 7 // 클러스터링이 적용되는 최소 줌 레벨
         });
-        
-        // 마커들을 클러스터러에 추가
+
+        // 클러스터러에 마커 추가
         clusterer.addMarkers(markers);
 
-        // GPX 파일 로드 및 경로 표시
-        function loadGPX(gpxData) {
-            var parser = new DOMParser();
-            var xmlDoc = parser.parseFromString(gpxData, 'text/xml');
-            var trackpoints = xmlDoc.getElementsByTagName('trkpt');
-            var path = [];
-
-            // GPX 데이터에서 경로 좌표 추출
-            for (var i = 0; i < trackpoints.length; i++) {
-                var lat = parseFloat(trackpoints[i].getAttribute('lat'));
-                var lon = parseFloat(trackpoints[i].getAttribute('lon'));
-                path.push(new kakao.maps.LatLng(lat, lon));
-            }
-
-            // 경로 표시
-            var polyline = new kakao.maps.Polyline({
-                path: path, // 경로
-                strokeWeight: 5, // 선 두께
-                strokeColor: '#ff0000', // 선 색
-                strokeOpacity: 0.7, // 선 투명도
-                strokeStyle: 'solid' // 선 스타일
-            });
-
-            polyline.setMap(map);
-        }
-
-        // 예시 GPX 데이터 (실제로는 외부 파일이나 API에서 로드)
-        var exampleGPX = `
-        <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1">
-            <trk>
-                <trkseg>
-                    <trkpt lat="37.41020233137107" lon="126.6796163126106"></trkpt>
-                    <trkpt lat="37.41040233137107" lon="126.6806163126106"></trkpt>
-                    <trkpt lat="37.41060233137107" lon="126.6816163126106"></trkpt>
-                </trkseg>
-            </trk>
-        </gpx>
-        `;
-        
-        loadGPX(exampleGPX); // GPX 데이터 로드 및 경로 표시
     </script>
 </body>
 </html>
