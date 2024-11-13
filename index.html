@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My KakaoMap Example</title>
+    <!-- Kakao 지도 API 호출 -->
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=19f1385bacd7bf7d9e5c7804cc8154ce"></script>
+    <style>
+        /* 전체 페이지 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 지도 스타일 */
+        #map {
+            width: 100%;
+            height: 600px;
+            max-width: 800px;
+        }
+
+        /* 말풍선 스타일 */
+        .custom-info-window {
+            border-radius: 15px;
+            border: 2px solid #007bff;
+            background-color: #ffffff;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            max-width: 200px;
+            text-align: center;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h3>카카오맵 예제 - 대한민국 지도</h3>
+    <div id="map"></div>
+
+    <script>
+        // 지도 초기 설정
+        var mapContainer = document.getElementById('map'); 
+        var mapOption = { 
+            center: new kakao.maps.LatLng(37.5665, 126.9780), // 지도 중심 좌표 (서울)
+            level: 7 // 확대 레벨
+        };
+
+        // 지도 생성
+        var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+        // 마커 추가할 좌표
+        var markerPosition = new kakao.maps.LatLng(37.47535272846636, 126.6443686099089);
+
+        // 마커 아이콘 생성 (SVG 기반 동그라미 아이콘)
+        var circleIcon = new kakao.maps.MarkerImage(
+            'data:image/svg+xml;utf-8,' + encodeURIComponent(`
+                <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="15" fill="#ff6347" stroke="white" stroke-width="2" />
+                </svg>`), 
+            new kakao.maps.Size(40, 40), 
+            { offset: new kakao.maps.Point(20, 20) }
+        );
+
+        // 마커 생성
+        var marker = new kakao.maps.Marker({
+            position: markerPosition,
+            image: circleIcon,
+            map: map
+        });
+
+        // 말풍선 내용
+        var infoContent = `<div class="custom-info-window">여기는 인천입니다!<br>클릭하면 사라져요.</div>`;
+        
+        // 말풍선 생성
+        var infoWindow = new kakao.maps.InfoWindow({
+            content: infoContent,
+            removable: true
+        });
+
+        // 마커 클릭 시 말풍선 열기 및 토글 기능
+        var isOpen = false;
+        kakao.maps.event.addListener(marker, 'click', function() {
+            if (isOpen) {
+                infoWindow.close();
+            } else {
+                infoWindow.open(map, marker);
+            }
+            isOpen = !isOpen;
+        });
+    </script>
+</body>
+</html>
