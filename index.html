@@ -44,6 +44,18 @@
             );
         }
 
+         // [새로 추가] 연두색 동그라미 마커 생성 함수
+        function createGreenCircleIcon() {
+            return new kakao.maps.MarkerImage(
+                'data:image/svg+xml;utf-8,' + encodeURIComponent(`
+                    <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="10" fill="lightgreen" stroke="white" stroke-width="3"/>
+                    </svg>`),
+                new kakao.maps.Size(20, 20),
+                { offset: new kakao.maps.Point(10, 10) }
+            );
+        }
+        
         // GPX 데이터를 파싱하는 함수
         function parseGPX(gpxData) {
             var parser = new DOMParser();
@@ -13183,6 +13195,39 @@
             });
 
             markers.push(marker);
+        });
+
+        // [새로 추가] 연두색 마커 데이터
+        var greenPositions = [
+            { lat: 37.825038949682224, lon: 126.43479227243057, memo: "서해랑길103북" },
+            { lat: 37.550, lon: 126.990, memo: "연두색 마커 2" },
+            { lat: 37.560, lon: 126.995, memo: "연두색 마커 3" }
+        ];
+        
+        // 연두색 마커 추가
+        greenPositions.forEach(function(position) {
+            var greenMarker = new kakao.maps.Marker({
+                position: new kakao.maps.LatLng(position.lat, position.lon),
+                image: createGreenCircleIcon()
+            });
+        
+            var greenInfoWindow = new kakao.maps.InfoWindow({
+                content: `<div style="padding:5px; font-size: 12px;">${position.memo}</div>`,
+                removable: true
+            });
+        
+            var isGreenOpen = false;
+        
+            kakao.maps.event.addListener(greenMarker, 'click', function() {
+                if (isGreenOpen) {
+                    greenInfoWindow.close();
+                } else {
+                    greenInfoWindow.open(map, greenMarker);
+                }
+                isGreenOpen = !isGreenOpen;
+            });
+        
+            greenMarker.setMap(map);
         });
 
         // 마커 클러스터러 설정
