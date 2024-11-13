@@ -17,10 +17,42 @@
                 height: 70vh; /* 모바일 화면에서는 높이를 약간 줄임 */
             }
         }
+
+                /* 텍스트 정보를 상단에 고정으로 표시 */
+        #header {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8); /* 반투명 배경 */
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
     </style>
 </head>
 <body>
-    <h3>트레인의 걷기 : 2024년 10월 20일 서해랑길 103코스 남진 시작 - 2024년 11월 10일 현재 94코스까지 완료</h3>
+    <!-- 상단 텍스트 영역 -->
+    <div id="header">
+        <h3>트레인의 걷기 진행 상황</h3>
+        <p>2024년 10월 20일 서해랑길 103코스 남진 시작</p>
+        <p>2024년 11월 10일 현재 94코스 완료</p>
+    </div>
+
+    <!-- 지도 영역 -->
     <div id="map"></div>
 
     <script>
