@@ -69,19 +69,19 @@
             return new kakao.maps.MarkerImage(
                 'data:image/svg+xml;utf-8,' + encodeURIComponent(`
                     <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="10" cy="10" r="10" fill="red" stroke="white" stroke-width="3"/>
+                        <circle cx="10" cy="10" r="10" fill="red" stroke="white" stroke-width="3" stroke-linejoin="round"/>
                     </svg>`), // 동그라미 SVG (크기 15x15로 설정)
                 new kakao.maps.Size(20, 20), // 마커 크기 설정
                 { offset: new kakao.maps.Point(10, 10) } // 마커 중심 설정 (중앙에 위치)
             );
         }
 
-         // [새로 추가] 연두색 동그라미 마커 생성 함수
+         // [새로 추가] 추가 동그라미 마커 생성 함수
         function createGreenCircleIcon() {
             return new kakao.maps.MarkerImage(
                 'data:image/svg+xml;utf-8,' + encodeURIComponent(`
                     <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="10" cy="10" r="10" fill="#00FF00" stroke="white" stroke-width="3"/>
+                        <circle cx="10" cy="10" r="10" fill="#3ee0f8" stroke="red" stroke-width="3" stroke-linejoin="round"/>
                     </svg>`),
                 new kakao.maps.Size(20, 20),
                 { offset: new kakao.maps.Point(10, 10) }
